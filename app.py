@@ -1,33 +1,37 @@
 import streamlit as st
+import ee
+import folium
 from processing import SpatialProcessor
-import geemap.foliumap as geemap
 
 st.set_page_config(layout="wide")
 st.title("Mon Premier Portrail GEE")
 
-# 1️⃣ Initialisation EE
-engine = SpatialProcessor()  # initialise EE
+# Initialisation EE
+engine = SpatialProcessor()
 
-# 2️⃣ Formulaire de saisie
+# Formulaire
 with st.sidebar:
-    st.header("Coordonnées")
-    lat = st.number_input("Latitude", value=48.85, format="%.4f")
-    lon = st.number_input("Longitude", value=2.35, format="%.4f")
+    lat = st.number_input("Latitude", value=48.85)
+    lon = st.number_input("Longitude", value=2.35)
     submit = st.button("Afficher la zone")
 
-# 3️⃣ Crée la carte sans réinitialiser EE
-m = geemap.Map(center=[lat, lon], zoom=12, add_google_map=False)
+# Carte Folium
+m = folium.Map(location=[lat, lon], zoom_start=12)
 
-# 4️⃣ Ajouter l'image Sentinel-2
 if submit:
-    with st.spinner("Récupération de l'image..."):
-        img = engine.get_satellite_image(lat, lon)
-        if img:
-            vis_params = {'bands': ['B4','B3','B2'], 'min':0, 'max':3000}
-            m.addLayer(img, vis_params, 'Sentinel-2 Image')
-            st.success(f"Image chargée pour {lat}, {lon}")
-        else:
-            st.warning("Aucune image disponible pour ces coordonnées et cette période.")
+    img = engine.get_satellite_image(lat, lon)
+    if img:
+        map_id_dict = ee.Image(img).getMapId({'bands': ['B4','B3','B2'], 'min':0, 'max':3000})
+        folium.raster_layers.TileLayer(
+            tiles=map_id_dict['tile_fetcher'].url_format,
+            attr='Google Earth Engine',
+            overlay=True,
+            name='Sentinel-2'
+        ).add_to(m)
+        st.success("Image chargée !")
+    else:
+        st.warning("Aucune image disponible")
 
-# 5️⃣ Affichage final
-m.to_streamlit(height=600)
+# Affichage carte dans Streamlit
+from streamlit_folium import st_folium
+st_folium(m, width=700, height=500)
