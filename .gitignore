@@ -5,6 +5,7 @@ gee_env
 #variables d'environnement
 .env
 #ignorer le fichier python compilé
-_pycache 
+__pycache__/
+*.pyc
 #ignorer les fichiers de logs
 *.log

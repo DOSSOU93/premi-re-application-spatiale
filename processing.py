@@ -1,25 +1,25 @@
-import streamlit as st
 import ee
-# Optional, if you need it for displaying images
-import matplotlib.image as mpimg
+import streamlit as st
 
 class SpatialProcessor:
     def __init__(self):
         """Initialise la connexion à Earth Engine via les secrets Streamlit"""
         try:
-            # Vérifier si on est en local ou sur Streamlit Cloud
-            if "earth_engine" in st.secrets:
-                # Récupération des infos du fichier .streamlit/secrets.toml
-                creds_dict = dict(st.secrets["earth_engine"])
-                
-                # Authentification par compte de service
-                credentials = ee.ServiceAccountCredentials(
-                    creds_dict['client_email'], 
-                    key_data=creds_dict['private_key']
-                )
-                ee.Initialize(credentials=credentials)
-            else:
-                # Fallback pour le développement local classique
-                ee.Initialize(project='app-teledetection')
+            creds_dict = st.secrets["earth_engine"]
+            credentials = ee.ServiceAccountCredentials(
+                creds_dict['client_email'],
+                key_data=creds_dict['private_key'].replace('\\n', '\n')  # essentiel
+            )
+            ee.Initialize(credentials=credentials)
         except Exception as e:
             st.error(f"Erreur d'initialisation Earth Engine : {e}")
+
+    def get_satellite_image(self, lat, lon):
+        """Récupère la dernière image Sentinel-2 pour un point donné"""
+        point = ee.Geometry.Point([lon, lat])
+        image = (ee.ImageCollection("COPERNICUS/S2_SR")
+                 .filterBounds(point)
+                 .filterDate('2023-01-01', '2023-12-31')  # filtre sur l'année
+                 .sort('SYSTEM:TIME_START', False)
+                 .first())
+        return image
