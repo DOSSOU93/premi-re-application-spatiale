@@ -8,7 +8,7 @@ class SpatialProcessor:
             creds_dict = st.secrets["earth_engine"]
             credentials = ee.ServiceAccountCredentials(
                 creds_dict['client_email'],
-                key_data=creds_dict['private_key'].replace('\\n', '\n')  # <- très important
+                key_data=creds_dict['private_key'].replace('\\n', '\n')  # important pour EE
             )
             ee.Initialize(credentials=credentials)
         except Exception as e:
@@ -19,7 +19,7 @@ class SpatialProcessor:
         point = ee.Geometry.Point([lon, lat])
         image = (ee.ImageCollection("COPERNICUS/S2_SR")
                  .filterBounds(point)
-                 .filterDate('2023-01-01', '2023-12-31')
+                 .filterDate('2022-01-01', '2023-12-31')  # période plus large
                  .sort('SYSTEM:TIME_START', False)
                  .first())
         return image
