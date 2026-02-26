@@ -1,13 +1,12 @@
 import streamlit as st
-import geemap.foliumap as geemap
 from processing import SpatialProcessor
+import geemap.foliumap as geemap
 
 st.set_page_config(layout="wide")
 st.title("Mon Premier Portrail GEE")
 
-# 1️⃣ Initialisation d'EE
+# 1️⃣ Initialisation EE
 engine = SpatialProcessor()  # initialise EE
-geemap.ee_initialize()        # force geemap à utiliser EE
 
 # 2️⃣ Formulaire de saisie
 with st.sidebar:
@@ -16,8 +15,8 @@ with st.sidebar:
     lon = st.number_input("Longitude", value=2.35, format="%.4f")
     submit = st.button("Afficher la zone")
 
-# 3️⃣ Crée la carte après initialisation
-m = geemap.Map(center=[lat, lon], zoom=12)
+# 3️⃣ Crée la carte sans réinitialiser EE
+m = geemap.Map(center=[lat, lon], zoom=12, add_google_map=False)
 
 # 4️⃣ Ajouter l'image Sentinel-2
 if submit:
@@ -30,5 +29,5 @@ if submit:
         else:
             st.warning("Aucune image disponible pour ces coordonnées et cette période.")
 
-# 5️⃣ Affichage final de la carte
+# 5️⃣ Affichage final
 m.to_streamlit(height=600)
